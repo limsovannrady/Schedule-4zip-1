@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Khmer OS Battambang', 'Battambang', serif;
+            background: var(--tg-theme-bg-color, #f2f2f7);
+            color: var(--tg-theme-text-color, #000);
+            min-height: 100vh;
+            padding-bottom: 72px;
+        }
+
+        /* ── Blocked ── */
+        #blocked-screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #0f1923;
+            color: #fff;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 32px;
+            z-index: 9999;
+        }
+        #blocked-screen .lock-icon { font-size: 64px; margin-bottom: 20px; }
+        #blocked-screen h2 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+        #blocked-screen p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+
+        /* ── Header ── */
+        .header {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(128,128,128,0.12);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--tg-theme-button-color, #2196F3);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; overflow: hidden;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-initials { font-size: 16px; font-weight: bold; color: #fff; }
+        .header-info { flex: 1; }
+        .header-name { font-size: 15px; font-weight: 700; }
+        .header-id { font-size: 12px; color: var(--tg-theme-hint-color, #888); }
+
+
+        /* ── Tab Content ── */
+        .tab-panel { display: none; padding: 16px; }
+        .tab-panel.active { display: block; }
+
+        /* ── Bottom Tab Bar ── */
+        .tab-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            border-top: 1px solid rgba(128,128,128,0.15);
+            display: flex;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+        .tab-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--tg-theme-hint-color, #999);
+            font-family: inherit;
+            gap: 3px;
+            transition: color 0.2s;
+        }
+        .tab-btn.active { color: var(--tg-theme-button-color, #2196F3); }
+        .tab-btn .tab-icon { font-size: 22px; }
+        .tab-btn .tab-label { font-size: 11px; font-weight: 500; }
+
+        /* ── Cards & Sections ── */
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--tg-theme-hint-color, #888);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 8px;
+            margin-top: 16px;
+        }
+        .section-label:first-child { margin-top: 0; }
+
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        /* ── Form Fields ── */
+        .field { padding: 12px 14px; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        .field:last-child { border-bottom: none; }
+        .field label { display: block; font-size: 12px; color: var(--tg-theme-hint-color, #888); margin-bottom: 6px; }
+        .field label.khmer-title {
+            font-family: 'Khmer OS Battambang', 'Battambang', serif;
+            font-size: 14px;
+            color: var(--tg-theme-text-color, #000);
+            letter-spacing: 0.3px;
+        }
+        .field select, .field input {
+            width: 100%;
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: var(--tg-theme-text-color, #000);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            appearance: none;
+        }
+        .datetime-wrapper { position: relative; }
+        .datetime-display {
+            font-size: 15px;
+            color: var(--tg-theme-text-color, #000);
+            cursor: pointer;
+            padding: 2px 0;
+        }
+        .datetime-hidden {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            cursor: pointer;
+        }
+
+        /* ── Submit Button ── */
+        .btn-submit {
+            width: 100%;
+            padding: 10px 20px;
+            background: #FF6B2B;
+            color: #fff;
+            border: none;
+            border-radius: 22px;
+            font-size: 18px;
+            font-family: 'Khmer OS Battambang', 'Battambang', serif;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            letter-spacing: 0.3px;
+        }
+        .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── Scheduled List ── */
+        .sched-item {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .sched-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+        .sched-info { flex: 1; min-width: 0; }
+        .sched-group { font-size: 14px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sched-time { font-size: 12px; color: var(--tg-theme-hint-color, #888); margin-bottom: 4px; }
+        .sched-type {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #FF6B2B;
+            background: rgba(255,107,43,0.1);
+            border-radius: 6px;
+            padding: 2px 7px;
+            margin-bottom: 4px;
+        }
+        .sched-item { cursor: pointer; }
+        .sched-detail {
+            display: none;
+            margin-top: 10px;
+            border-top: 1px solid rgba(128,128,128,0.15);
+            padding-top: 10px;
+        }
+        .sched-item.expanded .sched-detail { display: block; }
+        .sched-item.expanded { background: var(--tg-theme-secondary-bg-color, #fff); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .sched-detail-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: var(--tg-theme-text-color, #222);
+        }
+        .sched-detail-row:last-child { margin-bottom: 0; }
+        .sched-detail-label {
+            font-weight: 600;
+            color: var(--tg-theme-hint-color, #888);
+            white-space: nowrap;
+            min-width: 80px;
+        }
+        .sched-detail-val {
+            word-break: break-all;
+            flex: 1;
+        }
+        .sched-content {
+            font-size: 12px;
+            color: var(--tg-theme-text-color, #333);
+            background: rgba(128,128,128,0.07);
+            border-radius: 8px;
+            padding: 6px 9px;
+            word-break: break-word;
+            white-space: pre-wrap;
+            max-height: 80px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .sched-meta {
+            font-size: 11px;
+            color: var(--tg-theme-hint-color, #aaa);
+            margin-top: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .sched-meta span {
+            background: rgba(128,128,128,0.1);
+            border-radius: 5px;
+            padding: 1px 6px;
+        }
+        .sched-arrow {
+            font-size: 11px;
+            color: var(--tg-theme-hint-color, #aaa);
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+        .sched-item.expanded .sched-arrow { transform: rotate(180deg); }
+        .btn-delete {
+            background: rgba(255,59,48,0.1);
+            border: none;
+            color: #ff3b30;
+            font-size: 13px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--tg-theme-hint-color, #aaa);
+        }
+        .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        /* ── Loading spinner ── */
+        .loading { text-align: center; padding: 32px; color: var(--tg-theme-hint-color, #aaa); font-size: 13px; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 88px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #323232;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.25s;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 999;
+        }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<div id="blocked-screen">
+    <div class="lock-icon" id="blocked-icon">🔒</div>
+    <h2 id="blocked-title">សម្រាប់ Telegram តែប៉ុណ្ណោះ</h2>
+    <p id="blocked-msg">App នេះដំណើរការតែនៅក្នុង<br>Telegram Mini App ប៉ុណ្ណោះ។<br><br>សូមបើកតាម Telegram Bot។</p>
+</div>
+
+<div id="main-content" style="display:none">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="avatar" id="avatar-container">
+            <span class="avatar-initials" id="avatar-initials">?</span>
+        </div>
+        <div class="header-info">
+            <div class="header-name" id="full-name">...</div>
+            <div class="header-id" id="user-id">...</div>
+        </div>
+    </div>
+
+    <!-- Tab: Schedule -->
+    <div class="tab-panel active" id="tab-schedule">
+
+        <div class="card">
+            <div class="field">
+                <label class="khmer-title">ក្រុម</label>
+                <select id="group-select">
+                    <option value="">⏳ កំពុងផ្ទុក...</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="khmer-title">កំណត់ ថ្ងៃ-ខែ-ឆ្នាំ ម៉ោង</label>
+                <div class="datetime-wrapper">
+                    <div class="datetime-display" id="schedule-time-display">--/--/---- --:--</div>
+                    <input type="datetime-local" id="schedule-time" class="datetime-hidden">
+                </div>
+            </div>
+        </div>
+        <button class="btn-submit" id="submit-btn" disabled>កំណត់</button>
+    </div>
+
+    <!-- Tab: Scheduled -->
+    <div class="tab-panel" id="tab-scheduled">
+        <div id="scheduled-list"><div class="loading">⏳ កំពុងផ្ទុក...</div></div>
+    </div>
+
+    <!-- Bottom Tab Bar -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="schedule">
+            <span class="tab-icon">📅</span>
+            <span class="tab-label">ការរៀបចំ</span>
+        </button>
+        <button class="tab-btn" data-tab="scheduled">
+            <span class="tab-icon">🗓</span>
+            <span class="tab-label">បញ្ជី</span>
+        </button>
+
+    </div>
+
+    <div class="toast" id="toast"></div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    function showBlocked(icon, title, msg) {
+        document.getElementById('blocked-icon').textContent = icon;
+        document.getElementById('blocked-title').textContent = title;
+        document.getElementById('blocked-msg').innerHTML = msg;
+        document.getElementById('blocked-screen').style.display = 'flex';
+    }
+
+    const ADMIN_ID = 5002402843;
+    const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+
+    if (!tg.initData || tg.initData === '') {
+        showBlocked('🔒', 'សម្រាប់ Telegram តែប៉ុណ្ណោះ',
+            'App នេះដំណើរការតែនៅក្នុង<br>Telegram Mini App ប៉ុណ្ណោះ។<br><br>សូមបើកតាម Telegram Bot។');
+    } else if (!user || user.id !== ADMIN_ID) {
+        showBlocked('⛔', 'គ្មានសិទ្ធិចូលប្រើ',
+            'App នេះសម្រាប់តែ Admin ប៉ុណ្ណោះ។<br><br>អ្នកមិនមានសិទ្ធិចូលប្រើ<br>Mini App នេះទេ។');
+    } else {
+        document.getElementById('main-content').style.display = 'block';
+
+        const firstName = user.first_name || '';
+        const lastName = user.last_name || '';
+        const fullName = [firstName, lastName].filter(Boolean).join(' ');
+        const userId = user.id;
+
+        document.getElementById('full-name').textContent = fullName;
+        document.getElementById('user-id').textContent = 'ID: ' + userId;
+
+        const initials = [firstName[0], lastName ? lastName[0] : ''].filter(Boolean).join('');
+        document.getElementById('avatar-initials').textContent = initials || '?';
+        if (user.photo_url) {
+            document.getElementById('avatar-container').innerHTML =
+                '<img src="' + user.photo_url + '" alt="avatar">';
+        }
+
+        // ── Tab Switching ──
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        let scheduledRefreshInterval = null;
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.tab;
+                tg.HapticFeedback.selectionChanged();
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabPanels.forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + target).classList.add('active');
+                if (target === 'scheduled') {
+                    loadScheduled(userId);
+                    if (!scheduledRefreshInterval) {
+                        scheduledRefreshInterval = setInterval(() => loadScheduled(userId), 10000);
+                    }
+                } else {
+                    clearInterval(scheduledRefreshInterval);
+                    scheduledRefreshInterval = null;
+                }
+            });
+        });
+
+        // ── Schedule Tab ──
+        function formatDatetimeDisplay(val) {
+            if (!val) return '--/--/---- --:--';
+            const [datePart, timePart] = val.split('T');
+            const [y, m, d] = datePart.split('-');
+            return `${d}/${m}/${y} ${timePart}`;
+        }
+
+        const utcNow = new Date();
+        const cambodiaNow = new Date(utcNow.getTime() + 7 * 3600000);
+        const cambodiaStr = cambodiaNow.toISOString().slice(0, 16);
+        const schedInput = document.getElementById('schedule-time');
+        const schedDisplay = document.getElementById('schedule-time-display');
+        schedInput.min = cambodiaStr;
+        schedInput.value = cambodiaStr;
+        schedDisplay.textContent = formatDatetimeDisplay(cambodiaStr);
+        schedInput.addEventListener('change', () => {
+            schedDisplay.textContent = formatDatetimeDisplay(schedInput.value);
+        });
+
+        loadGroups(userId);
+
+        document.getElementById('submit-btn').addEventListener('click', async () => {
+            const sel = document.getElementById('group-select');
+            const groupId = sel.value;
+            const groupTitle = sel.options[sel.selectedIndex]?.text || '';
+            const scheduledTimeRaw = document.getElementById('schedule-time').value;
+            const scheduledTime = scheduledTimeRaw ? scheduledTimeRaw + ':00+07:00' : '';
+
+            if (!groupId || !scheduledTime) { showToast('សូមជ្រើសរើសក្រុម និងម៉ោង!'); return; }
+            if (new Date(scheduledTimeRaw + '+07:00').getTime() <= Date.now()) {
+                showToast('❌ សូមជ្រើសរើសម៉ោងអនាគតកាល!'); return;
+            }
+
+            tg.HapticFeedback.impactOccurred('medium');
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true; btn.textContent = 'កំពុង...';
+
+            try {
+                const res = await fetch('/api/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, group_id: groupId, group_title: groupTitle, scheduled_time: scheduledTime })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.close();
+                } else {
+                    tg.HapticFeedback.notificationOccurred('error');
+                    showToast('❌ ' + (data.error || 'មានបញ្ហា'));
+                    btn.disabled = false; btn.textContent = 'កំណត់';
+                }
+            } catch (e) {
+                tg.HapticFeedback.notificationOccurred('error');
+                showToast('❌ មិនអាចភ្ជាប់បាន');
+                btn.disabled = false; btn.textContent = 'កំណត់';
+            }
+        });
+
+        // ── Scheduled Tab ──
+        async function loadScheduled(userId) {
+            const el = document.getElementById('scheduled-list');
+            el.innerHTML = '<div class="loading">⏳ កំពុងផ្ទុក...</div>';
+            try {
+                const res = await fetch('/api/scheduled?user_id=' + userId);
+                const list = await res.json();
+                if (!list.length) {
+                    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓</div><p>គ្មាន schedule</p></div>';
+                    return;
+                }
+                const typeIcon = { text:'✉️', photo:'🖼️', video:'🎬', document:'📄', sticker:'🎭', voice:'🎤', audio:'🎵', animation:'🎞️', video_note:'📹', forward:'↩️' };
+                const typeLabel = { text:'អត្ថបទ', photo:'រូបភាព', video:'វីដេអូ', document:'ឯកសារ', sticker:'Sticker', voice:'សំឡេង', audio:'អូឌីយ៉ូ', animation:'Animation', video_note:'វីដេអូមូល', forward:'បញ្ជូនបន្ត', contact:'ទំនាក់ទំនង', location:'ទីតាំង', venue:'ទីកន្លែង', poll:'បោះឆ្នោត', dice:'ឡុក' };
+
+                // Group items by group_id + scheduled_time
+                const groups = [];
+                const keyMap = {};
+                list.forEach((item, idx) => {
+                    const key = (item.group_id || item.group_title) + '|' + (item.scheduled_time || '');
+                    if (keyMap[key] === undefined) {
+                        keyMap[key] = groups.length;
+                        groups.push({ key, group_title: item.group_title, scheduled_time_display: item.scheduled_time_display || item.scheduled_time, items: [], indices: [] });
+                    }
+                    groups[keyMap[key]].items.push(item);
+                    groups[keyMap[key]].indices.push(idx);
+                });
+
+                el.innerHTML = groups.map((g, gi) => {
+                    const types = g.items.map(it => `<span class="sched-type">${typeLabel[it.msg_type] || it.msg_type || 'text'}</span>`).join('');
+                    const indicesAttr = g.indices.join(',');
+                    return `
+                    <div class="sched-item" id="sched-${gi}">
+                        <div class="sched-icon">✉️</div>
+                        <div class="sched-info">
+                            <div class="sched-group">${g.group_title} #${g.items[0].schedule_number ?? gi + 1}</div>
+                            <div class="sched-time">⏰ ${g.scheduled_time_display}</div>
+                        </div>
+                        <button class="btn-delete" onclick="deleteScheduledGroup('${indicesAttr}', ${gi}, ${userId})">🗑</button>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>មានបញ្ហាក្នុងការផ្ទុក</p></div>';
+            }
+        }
+
+        window.deleteScheduledGroup = async (indicesStr, gi, userId) => {
+            tg.HapticFeedback.impactOccurred('medium');
+            const indices = indicesStr.split(',').map(Number).sort((a, b) => b - a);
+            try {
+                for (const idx of indices) {
+                    await fetch('/api/scheduled/' + idx, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: userId })
+                    });
+                }
+                tg.HapticFeedback.notificationOccurred('success');
+                document.getElementById('sched-' + gi)?.remove();
+                const remaining = document.querySelectorAll('.sched-item').length;
+                if (!remaining) {
+                    document.getElementById('scheduled-list').innerHTML =
+                        '<div class="empty-state"><div class="empty-icon">🗓</div><p>គ្មាន schedule</p></div>';
+                }
+            } catch (e) { showToast('❌ មិនអាចលុបបាន'); }
+        };
+
+        window.toggleSchedDetail = (index, event) => {
+            if (event.target.closest('.btn-delete')) return;
+            const el = document.getElementById('sched-' + index);
+            if (!el) return;
+            el.classList.toggle('expanded');
+            tg.HapticFeedback.selectionChanged();
+        };
+
+    }
+
+    // ── Helpers ──
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function loadGroups(userId) {
+        const sel = document.getElementById('group-select');
+        try {
+            const res = await fetch('/api/groups?user_id=' + userId);
+            const groups = await res.json();
+            const keys = Object.keys(groups);
+            sel.innerHTML = '';
+            if (!keys.length) {
+                sel.innerHTML = '<option value="">គ្មានក្រុម — សូម /start ក្នុង Group</option>';
+            } else {
+                keys.forEach(id => {
+                    const opt = document.createElement('option');
+                    opt.value = id;
+                    opt.textContent = groups[id].title;
+                    sel.appendChild(opt);
+                });
+                document.getElementById('submit-btn').disabled = false;
+            }
+        } catch (e) {
+            sel.innerHTML = '<option value="">មានបញ្ហាក្នុងការផ្ទុក</option>';
+        }
+    }
+</script>
+</body>
+</html>
