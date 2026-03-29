@@ -16,7 +16,7 @@ from telegram.ext import (
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CAMBODIA_TZ = timezone(timedelta(hours=7))
 WEBAPP_URL = os.environ.get("WEBAPP_URL", "")
-ADMIN_ID = 5002402843
+ADMIN_ID = int(os.environ.get("ADMIN_ID", "5002402843"))
 
 GROUPS_FILE = "groups.json"
 USER_GROUPS_FILE = "user_groups.json"

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: telegram-scheduler-bot
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: WEBAPP_URL
+        sync: false
+      - key: ADMIN_ID
+        sync: false

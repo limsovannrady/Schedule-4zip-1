@@ -6,7 +6,7 @@ from flask import Flask, send_from_directory, jsonify, request
 app = Flask(__name__, static_folder="static")
 
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-ADMIN_ID = "5002402843"
+ADMIN_ID = os.environ.get("ADMIN_ID", "5002402843")
 GROUPS_FILE = "groups.json"
 USER_GROUPS_FILE = "user_groups.json"
 PENDING_FILE = "pending_schedules.json"
