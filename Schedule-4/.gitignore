@@ -1,49 +1,64 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
 
-# compiled output
-dist
-tmp
-out-tsc
-*.tsbuildinfo
-.expo
-.expo-shared
+# Virtual environments
+env/
+venv/
+ENV/
+.venv/
 
-# dependencies
-node_modules
+# Environment variables / secrets
+.env
+.env.local
+.env.*
 
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
+# Runtime data (JSON storage files - sensitive data)
+groups.json
+user_groups.json
+pending_schedules.json
+scheduled_messages.json
+settings.json
 
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# Replit internal files
+.local/
+.cache/
+.agents/
+.replit
+replit.nix
+.replitignore
+.pythonlibs/
+.upm/
+uv.lock
 
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
+# Logs
+*.log
 
-# System Files
+# System files
 .DS_Store
 Thumbs.db
 
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
+# IDE
+.vscode/
+.idea/
+*.sublime-workspace
 
-# Replit
-.cache/
-.local/
+# Attached assets / uploaded media
+attached_assets/
